@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello world from strings.xml</string>
+    <string name="button_text">OK</string>
+    <string name="app_name">HelloAndroid</string>
+    <string name="list_zip_name">List Zip Contents</string>
+    <string name="view_page_name">View Page</string>
+</resources>
