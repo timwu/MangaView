@@ -1,4 +1,4 @@
-package com.timwu.HelloAndroid;
+package com.timwu.MangaView;
 
 import android.content.Context;
 import android.graphics.Matrix;

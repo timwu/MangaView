@@ -3,12 +3,12 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:isScrollContainer="true">
-	<com.timwu.HelloAndroid.MangaPageView
+	<com.timwu.MangaView.MangaPageView
  		xmlns:android="http://schemas.android.com/apk/res/android"
   		android:id="@+id/view_page_view"
   		android:layout_width="fill_parent"
   		android:layout_height="wrap_content"
   		android:scaleType="matrix">
-	</com.timwu.HelloAndroid.MangaPageView>
+	</com.timwu.MangaView.MangaPageView>
 </LinearLayout>
 

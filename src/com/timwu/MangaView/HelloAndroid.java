@@ -1,6 +1,8 @@
-package com.timwu.HelloAndroid;
+package com.timwu.MangaView;
 
 import java.io.File;
+
+import com.timwu.HelloAndroid.R;
 
 import android.app.ListActivity;
 import android.content.Intent;

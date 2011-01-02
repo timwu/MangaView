@@ -1,4 +1,4 @@
-package com.timwu.HelloAndroid;
+package com.timwu.MangaView;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import com.timwu.HelloAndroid.R;
 
 import android.app.ListActivity;
 import android.content.Intent;

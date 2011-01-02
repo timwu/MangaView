@@ -1,8 +1,10 @@
-package com.timwu.HelloAndroid;
+package com.timwu.MangaView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipFile;
+
+import com.timwu.HelloAndroid.R;
 
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
