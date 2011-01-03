@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="button_text">OK</string>
     <string name="app_name">MangaView</string>
     <string name="list_zip_name">List Zip Contents</string>
     <string name="view_page_name">View Page</string>
+    
+    <!-- Browse strings. -->
+    <string name="sd_unavailable">External storage is not available.</string>
+    <string name="browse_empty">Empty.</string>
+    <string name="non_directory_error">Not a directory.</string>
 </resources>

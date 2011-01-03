@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.timwu.HelloAndroid.R;
+import com.timwu.MangaView.R;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -31,7 +31,7 @@ public class ListZipActivity extends ListActivity implements OnItemClickListener
 			while(zipEntries.hasMoreElements()) {
 				zipContents.add(zipEntries.nextElement().getName());
 			}
-			setListAdapter(new ArrayAdapter<String>(this, R.layout.list_item, zipContents));
+			setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, zipContents));
 			getListView().setOnItemClickListener(this);
 		} catch (IOException e) {
 			Log.e(TAG, "Can't open zip file.", e);
