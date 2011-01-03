@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+	<com.timwu.MangaView.MangaPageView
+  		android:id="@+id/read_manga_page_view"
+  		android:layout_width="fill_parent"
+  		android:layout_height="wrap_content"
+  		android:scaleType="matrix">
+	</com.timwu.MangaView.MangaPageView>
+</LinearLayout>
