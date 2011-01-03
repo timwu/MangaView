@@ -1,15 +1,7 @@
 package com.timwu.MangaView;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 import com.timwu.MangaView.R;
 
@@ -32,6 +24,12 @@ public class Browse extends ListActivity implements OnItemClickListener, Filenam
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.browse);
+		getListView().setOnItemClickListener(this);
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
 		if (!isExternalStorageAvailable()) {
 			setEmptyText(R.string.sd_unavailable);
 			return;
@@ -41,9 +39,8 @@ public class Browse extends ListActivity implements OnItemClickListener, Filenam
 			return;
 		}
 		setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, getFile().list(this)));
-		getListView().setOnItemClickListener(this);
 	}
-	
+
 	private void setEmptyText(int resId) {
 		TextView tv = (TextView) findViewById(android.R.id.empty);
 		tv.setText(resId);
