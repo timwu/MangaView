@@ -71,7 +71,9 @@ public class Browse extends ListActivity implements OnItemClickListener, Filenam
 	public void onItemClick(AdapterView<?> listView, View itemView, int position, long id) {
 		String filename = (String) listView.getAdapter().getItem(position);
 		File f = new File(file, filename);
-		if (f.isDirectory()) {
+		if (MangaVolume.validMangaFile(f)) {
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.fromFile(f), this, Read.class));
+		} else if (f.isDirectory()) {
 			startActivity(new Intent(Intent.ACTION_VIEW, Uri.fromFile(f), this, this.getClass()));
 		}
 	}

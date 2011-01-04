@@ -20,6 +20,7 @@ public class Read extends Activity {
 		if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
 			vol = MangaVolume.getMangaVolumeForUri(getIntent().getData());
 		}
+		getMangaPageView().setImageDrawable(vol.getPage(0));
 	}
 	
 	private MangaPageView getMangaPageView() {

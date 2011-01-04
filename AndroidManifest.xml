@@ -4,17 +4,13 @@
       android:versionCode="1"
       android:versionName="1.0">
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
-        <activity android:name=".Browse"
-                  android:label="@string/app_name">
+        <activity android:name=".Browse">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ListZipActivity"
-        	      android:label="@string/list_zip_name"/>
-        <activity android:name=".ViewPage"
-                  android:label="@string/view_page_name"/>
+        <activity android:name=".Read"/>
 
     </application>
     <uses-sdk android:minSdkVersion="9" />

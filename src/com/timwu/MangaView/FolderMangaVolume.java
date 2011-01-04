@@ -28,4 +28,8 @@ public class FolderMangaVolume extends MangaVolume implements FilenameFilter {
 	public boolean accept(File dir, String filename) {
 		return validMangaPageFilename(filename);
 	}
+
+	public static boolean isValidMangaFolder(File file) {
+		return file.isDirectory() && new FolderMangaVolume(Uri.fromFile(file)).getNumberOfPages() > 0;
+	}
 }

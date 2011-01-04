@@ -34,9 +34,14 @@ public abstract class MangaVolume {
 		}
 	}
 	
-	protected final boolean validMangaPageFilename(String filename) {
+	public static final boolean validMangaPageFilename(String filename) {
 		return filename.endsWith(".jpg") ||
 		       filename.endsWith(".png") ||
 		       filename.endsWith(".bmp");
+	}
+	
+	public static final boolean validMangaFile(File file) {
+		return FolderMangaVolume.isValidMangaFolder(file) ||
+		       ZipMangaVolume.isValidMangaZip(file);
 	}
 }

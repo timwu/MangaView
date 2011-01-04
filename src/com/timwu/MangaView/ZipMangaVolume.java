@@ -1,5 +1,6 @@
 package com.timwu.MangaView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,4 +48,7 @@ public class ZipMangaVolume extends MangaVolume {
 		}
 	}
 
+	public static boolean isValidMangaZip(File file) {
+		return file.getName().endsWith(".cbz") || file.getName().endsWith(".zip");
+	}
 }
