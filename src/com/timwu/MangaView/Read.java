@@ -5,6 +5,8 @@ import com.timwu.MangaView.MangaPageView.IMangaController;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 
 public class Read extends Activity implements IMangaController {
 	
@@ -27,6 +29,23 @@ public class Read extends Activity implements IMangaController {
 		nextPage();
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add("prev");
+		menu.add("next");
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getTitle().equals("prev")) {
+			prevPage();
+		} else if (item.getTitle().equals("next")) {
+			nextPage();
+		}
+		return true;
+	}
+
 	@Override
 	public void nextPage() {
 		currentPage = (currentPage + 1) % vol.getNumberOfPages();
