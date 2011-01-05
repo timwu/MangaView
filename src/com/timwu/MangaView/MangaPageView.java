@@ -77,22 +77,37 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	@Override
 	public boolean setPositionAndScale(MangaPageView obj,
 			PositionAndScale newObjPosAndScale, PointInfo touchPoint) {
-		yOff = newObjPosAndScale.getYOff();
-		xOff = newObjPosAndScale.getXOff();
 		scale = newObjPosAndScale.getScale() >= minScale ? newObjPosAndScale.getScale() : scale ;
+		yOff = clip(getHeight(), scale * getDrawable().getIntrinsicHeight(), newObjPosAndScale.getYOff());
+		xOff = clip(getWidth(), scale * getDrawable().getIntrinsicWidth(), newObjPosAndScale.getXOff());
+		
+		// Create and apply the transformation matrix
+		// Looks like the matrix multiplication happens this way A * M = B
 		currentMatrix.reset();
 		currentMatrix.postScale(scale, scale);
-		currentMatrix.postTranslate(0, yOff);
+		currentMatrix.postTranslate(xOff, yOff);
 		setImageMatrix(currentMatrix);
 		Log.i(TAG, "xOff " + xOff + " threshold " + pageTurnThreshold);
-		if (xOff > pageTurnThreshold) {
-			controller.prevPage();
-			resetImageScale();
-		} else if (xOff < -pageTurnThreshold) {
-			controller.nextPage();
-			resetImageScale();
-		}
+//		if (xOff > pageTurnThreshold) {
+//			controller.prevPage();
+//			resetImageScale();
+//		} else if (xOff < -pageTurnThreshold) {
+//			controller.nextPage();
+//			resetImageScale();
+//		}
 		return true;
+	}
+	
+	private float clip(float boxLen, float imageLen, float offset) {
+		if (boxLen < imageLen) {
+			if (offset > 0) return 0;
+			if (offset < boxLen - imageLen) return boxLen - imageLen;
+			return offset;
+		} else {
+			if (offset > boxLen - imageLen) return boxLen - imageLen;
+			if (offset < 0) return 0;
+			return offset;
+		}
 	}
 
 	@Override
