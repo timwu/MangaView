@@ -9,6 +9,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class Read extends Activity implements IMangaController {
+	private static final String TAG = Read.class.getSimpleName();
+	private static final String CURRENT_PAGE_KEY = "currentPage";
 	
 	private MangaVolume vol;
 	private int currentPage = -1;
@@ -18,6 +20,9 @@ public class Read extends Activity implements IMangaController {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.read);
 		getMangaPageView().setMangaController(this);
+		if (savedInstanceState != null && savedInstanceState.containsKey(CURRENT_PAGE_KEY)) {
+			currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY) - 1;
+		}
 	}
 
 	@Override
@@ -44,6 +49,12 @@ public class Read extends Activity implements IMangaController {
 			nextPage();
 		}
 		return true;
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt(CURRENT_PAGE_KEY, currentPage);
 	}
 
 	@Override
