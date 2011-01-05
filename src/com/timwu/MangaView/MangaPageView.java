@@ -7,6 +7,7 @@ import org.metalev.multitouch.controller.MultiTouchController.PositionAndScale;
 
 import android.content.Context;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -40,6 +41,12 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 		resetImageScale();
 	}
 	
+	@Override
+	public void setImageDrawable(Drawable drawable) {
+		super.setImageDrawable(drawable);
+		resetImageScale();
+	}
+
 	private void resetImageScale() {
 		xOff = 0;
 		yOff = 0;
