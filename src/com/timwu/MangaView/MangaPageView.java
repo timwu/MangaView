@@ -11,6 +11,9 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
 public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<MangaPageView> {
@@ -21,7 +24,6 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	private MultiTouchController<MangaPageView> multiTouchController = new MultiTouchController<MangaPageView>(this);
 	private Matrix currentMatrix = new Matrix();
 	private float scale, minScale; //minScale clamps the scaling to fit the width of the screen at least.
-	private float xOff, yOff, pageTurnThreshold;
 	
 	public MangaPageView(Context context) {
 		super(context);
@@ -48,10 +50,7 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	}
 
 	private void resetImageScale() {
-		xOff = 0;
-		yOff = 0;
 		minScale = scale = (getWidth() * 1.0f) / getDrawable().getIntrinsicWidth();
-		pageTurnThreshold = PAGE_TURN_THRESHOLD_RATIO * getDrawable().getIntrinsicWidth();
 		currentMatrix.setScale(scale, scale);
 		setImageMatrix(currentMatrix);
 	}
@@ -78,15 +77,22 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	@Override
 	public void getPositionAndScale(MangaPageView obj,
 			PositionAndScale objPosAndScaleOut) {
-		objPosAndScaleOut.set(xOff, yOff, true, scale, false, 0.0f, 0.0f, false, 0.0f);
+		float offsets[] = {0.0f, 0.0f};
+		Matrix scaleMatrix = new Matrix();
+		scaleMatrix.setScale(scale, scale);
+		Matrix scaleInverse = new Matrix();
+		scaleMatrix.invert(scaleInverse);
+		scaleInverse.postConcat(getImageMatrix());
+		scaleInverse.mapPoints(offsets);
+		objPosAndScaleOut.set(offsets[0], offsets[1], true, scale, false, 0.0f, 0.0f, false, 0.0f);
 	}
 
 	@Override
 	public boolean setPositionAndScale(MangaPageView obj,
 			PositionAndScale newObjPosAndScale, PointInfo touchPoint) {
 		scale = newObjPosAndScale.getScale() >= minScale ? newObjPosAndScale.getScale() : scale ;
-		yOff = clip(getHeight(), scale * getDrawable().getIntrinsicHeight(), newObjPosAndScale.getYOff());
-		xOff = clip(getWidth(), scale * getDrawable().getIntrinsicWidth(), newObjPosAndScale.getXOff());
+		float yOff = clip(getHeight(), scale * getDrawable().getIntrinsicHeight(), newObjPosAndScale.getYOff());
+		float xOff = clip(getWidth(), scale * getDrawable().getIntrinsicWidth(), newObjPosAndScale.getXOff());
 		
 		// Create and apply the transformation matrix
 		// Looks like the matrix multiplication happens this way A * M = B
@@ -94,7 +100,6 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 		currentMatrix.postScale(scale, scale);
 		currentMatrix.postTranslate(xOff, yOff);
 		setImageMatrix(currentMatrix);
-		Log.i(TAG, "xOff " + xOff + " threshold " + pageTurnThreshold);
 //		if (xOff > pageTurnThreshold) {
 //			controller.prevPage();
 //			resetImageScale();
@@ -104,7 +109,7 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 //		}
 		return true;
 	}
-	
+
 	private float clip(float boxLen, float imageLen, float offset) {
 		if (boxLen < imageLen) {
 			if (offset > 0) return 0;
