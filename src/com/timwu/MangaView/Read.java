@@ -38,6 +38,7 @@ public class Read extends Activity implements IMangaController {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add("prev");
 		menu.add("next");
+		menu.add("scroll_end");
 		return true;
 	}
 
@@ -47,6 +48,8 @@ public class Read extends Activity implements IMangaController {
 			prevPage();
 		} else if (item.getTitle().equals("next")) {
 			nextPage();
+		} else if (item.getTitle().equals("scroll_end")) {
+			getMangaPageView().translateAnimation(0, 100);
 		}
 		return true;
 	}
@@ -65,7 +68,7 @@ public class Read extends Activity implements IMangaController {
 	
 	@Override
 	public void prevPage() {
-		currentPage = currentPage == 0 ? vol.getNumberOfPages() : currentPage - 1;
+		currentPage = currentPage == 0 ? vol.getNumberOfPages() - 1 : currentPage - 1;
 		getMangaPageView().setImageDrawable(vol.getPage(currentPage));
 	}
 	

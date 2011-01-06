@@ -10,31 +10,39 @@ import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
-public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<MangaPageView> {
+public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<MangaPageView>, AnimationListener, OnGestureListener {
 	private static final String TAG = MangaPageView.class.getSimpleName();
-	private static final float PAGE_TURN_THRESHOLD_RATIO = 0.125f;
+	private static final float PAGE_TURN_THRESHOLD = 300.0f;
 	
 	private IMangaController controller;
 	private MultiTouchController<MangaPageView> multiTouchController = new MultiTouchController<MangaPageView>(this);
+	private GestureDetector gestureDetector;
 	private Matrix currentMatrix = new Matrix();
 	private float scale, minScale; //minScale clamps the scaling to fit the width of the screen at least.
+	private float animationEndX, animationEndY;
 	
 	public MangaPageView(Context context) {
 		super(context);
+		gestureDetector = new GestureDetector(context, this);
 	}
 
 	public MangaPageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		gestureDetector = new GestureDetector(context, this);
 	}
 
 	public MangaPageView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		gestureDetector = new GestureDetector(context, this);
 	}
 
 	@Override
@@ -57,7 +65,9 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		return multiTouchController.onTouchEvent(event);
+		boolean result = multiTouchController.onTouchEvent(event);
+		result |= gestureDetector.onTouchEvent(event);
+		return result;
 	}
 	
 	public void setMangaController(IMangaController controller) {
@@ -77,14 +87,19 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	@Override
 	public void getPositionAndScale(MangaPageView obj,
 			PositionAndScale objPosAndScaleOut) {
-		float offsets[] = {0.0f, 0.0f};
+		float offsets[] = getOffsets();
+		objPosAndScaleOut.set(offsets[0], offsets[1], true, scale, false, 0.0f, 0.0f, false, 0.0f);
+	}
+	
+	private float[] getOffsets() {
+		float [] offsets = { 0.0f, 0.0f };
 		Matrix scaleMatrix = new Matrix();
 		scaleMatrix.setScale(scale, scale);
 		Matrix scaleInverse = new Matrix();
 		scaleMatrix.invert(scaleInverse);
 		scaleInverse.postConcat(getImageMatrix());
 		scaleInverse.mapPoints(offsets);
-		objPosAndScaleOut.set(offsets[0], offsets[1], true, scale, false, 0.0f, 0.0f, false, 0.0f);
+		return offsets;
 	}
 
 	@Override
@@ -109,6 +124,16 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 //		}
 		return true;
 	}
+	
+	public void translateAnimation(float dx, float dy) {
+		animationEndX = dx;
+		animationEndY = dy;
+		TranslateAnimation ta = new TranslateAnimation(0, dx, 0, dy);
+		ta.setDuration(2000);
+		ta.setInterpolator(new DecelerateInterpolator());
+		ta.setAnimationListener(this);
+		startAnimation(ta);
+	}
 
 	private float clip(float boxLen, float imageLen, float offset) {
 		if (boxLen < imageLen) {
@@ -125,5 +150,62 @@ public class MangaPageView extends ImageView implements MultiTouchObjectCanvas<M
 	@Override
 	public void selectObject(MangaPageView obj, PointInfo touchPoint) {
 		// Ignore
+	}
+
+	@Override
+	public void onAnimationEnd(Animation animation) {
+		Matrix transformMatrix = new Matrix(getImageMatrix());
+		transformMatrix.postTranslate(animationEndX, animationEndY);
+		setImageMatrix(transformMatrix);
+	}
+
+	@Override
+	public void onAnimationRepeat(Animation animation) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onAnimationStart(Animation animation) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean onDown(MotionEvent arg0) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onFling(MotionEvent initialEvent, MotionEvent finalEvent, float xVelocity,
+			float yVelocity) {
+		if (xVelocity > PAGE_TURN_THRESHOLD) {
+			controller.prevPage();
+			return true;
+		} else if (xVelocity < -PAGE_TURN_THRESHOLD){
+			controller.nextPage();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent arg0) {
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent arg0, MotionEvent arg1, float arg2,
+			float arg3) {
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent arg0) {
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent arg0) {
+		return false;
 	}
 }
