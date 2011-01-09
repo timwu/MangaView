@@ -9,11 +9,14 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.ScaleGestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 
 public class MangaPageView extends ImageView {
 	private static final String TAG = MangaPageView.class.getSimpleName();
+	private static final float INTERIAL_SCROLL_FACTOR = 0.15f;
 	
 	private GestureDetector gestureDetector;
 	private ScaleGestureDetector scaleGestureDetector;
@@ -50,9 +53,19 @@ public class MangaPageView extends ImageView {
 	
 	private class GestureListener extends SimpleOnGestureListener {
 		@Override
+		public boolean onDown(MotionEvent e) {
+			clearAnimation();
+			return false;
+		}
+		@Override
 		public boolean onFling(MotionEvent initialEvent, MotionEvent finalEvent, float xVelocity,
 				float yVelocity) {
-			return false;
+			TranslateAnimation ta = new TranslateAnimation(0, 0, xVelocity * INTERIAL_SCROLL_FACTOR, yVelocity * INTERIAL_SCROLL_FACTOR);
+			ta.setInterpolator(new DecelerateInterpolator());
+			ta.setDuration(1000);
+			ta.setFillAfter(true);
+			startAnimation(ta);
+			return true;
 		}
 		
 		@Override
