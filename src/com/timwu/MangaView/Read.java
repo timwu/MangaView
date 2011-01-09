@@ -1,25 +1,27 @@
 package com.timwu.MangaView;
 
-import com.timwu.MangaView.MangaPageView.IMangaController;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.Display;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.MotionEvent;
 
-public class Read extends Activity implements IMangaController {
+public class Read extends Activity {
 	private static final String TAG = Read.class.getSimpleName();
 	private static final String CURRENT_PAGE_KEY = "currentPage";
+	private static final float PAGE_TURN_ZONE = 0.1f;
 	
 	private MangaVolume vol;
+	private GestureDetector gestureDetector;
 	private int currentPage = -1;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		gestureDetector = new GestureDetector(this, new ReadGestureListener());
 		setContentView(R.layout.read);
-		getMangaPageView().setMangaController(this);
 		if (savedInstanceState != null && savedInstanceState.containsKey(CURRENT_PAGE_KEY)) {
 			currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY) - 1;
 		}
@@ -31,27 +33,12 @@ public class Read extends Activity implements IMangaController {
 		if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
 			vol = MangaVolume.getMangaVolumeForUri(getIntent().getData());
 		}
-		nextPage();
+		rightPage();
 	}
 	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add("prev");
-		menu.add("next");
-		menu.add("scroll_end");
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getTitle().equals("prev")) {
-			prevPage();
-		} else if (item.getTitle().equals("next")) {
-			nextPage();
-		} else if (item.getTitle().equals("scroll_end")) {
-			getMangaPageView().translateAnimation(0, 100);
-		}
-		return true;
+	public boolean onTouchEvent(MotionEvent event) {
+		return gestureDetector.onTouchEvent(event);
 	}
 
 	@Override
@@ -60,19 +47,33 @@ public class Read extends Activity implements IMangaController {
 		outState.putInt(CURRENT_PAGE_KEY, currentPage);
 	}
 
-	@Override
-	public void nextPage() {
+	public void rightPage() {
 		currentPage = (currentPage + 1) % vol.getNumberOfPages();
-		getMangaPageView().setImageDrawable(vol.getPage(currentPage));
+		getMangaPageView().setPageDrawable(vol.getPage(currentPage));
 	}
 	
-	@Override
-	public void prevPage() {
+	public void leftPage() {
 		currentPage = currentPage == 0 ? vol.getNumberOfPages() - 1 : currentPage - 1;
-		getMangaPageView().setImageDrawable(vol.getPage(currentPage));
+		getMangaPageView().setPageDrawable(vol.getPage(currentPage));
 	}
 	
 	private MangaPageView getMangaPageView() {
 		return (MangaPageView) findViewById(R.id.read_manga_page_view);
+	}
+	
+	private class ReadGestureListener extends SimpleOnGestureListener {
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e) {
+			Display display = getWindowManager().getDefaultDisplay();
+			int width = display.getWidth();
+			if (e.getRawX() < width * PAGE_TURN_ZONE) {
+				leftPage();
+				return true;
+			} else if (e.getRawX() >= (1 - PAGE_TURN_ZONE) * width) {
+				rightPage();
+				return true;
+			}
+			return false;
+		}
 	}
 }
