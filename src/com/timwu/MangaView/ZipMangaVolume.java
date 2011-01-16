@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
@@ -38,10 +40,10 @@ public class ZipMangaVolume extends MangaVolume {
 	}
 	
 	@Override
-	public Drawable getPage(int page) {
+	public Bitmap getPageBitmap(int page) {
 		if (page < 0 || page >= getNumberOfPages()) return null;
 		try {
-			return Drawable.createFromStream(zip.getInputStream(zip.getEntry(pageNames[page])), pageNames[page]);
+			return BitmapFactory.decodeStream(zip.getInputStream(zip.getEntry(pageNames[page])));
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to get page " + pageNames[page] + " from the zip file.", e);
 			return null;

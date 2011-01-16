@@ -2,6 +2,7 @@ package com.timwu.MangaView;
 
 import java.io.File;
 
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
@@ -13,7 +14,7 @@ public abstract class MangaVolume {
 		this. uri = uri;
 	}
 	
-	public abstract Drawable getPage(int page);
+	public abstract Bitmap getPageBitmap(int page);
 	
 	public String[] getPageNames() {
 		return pageNames;
