@@ -5,8 +5,7 @@ import java.util.Calendar;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -30,6 +29,7 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 	private Bitmap left, right, center;
 	private Boolean redraw = false;
 	private boolean touchDown = false;
+	private boolean pageChangeRequested = false;
 	
 	private class DrawingThread extends Thread {
 		private SimpleAnimation animation;
@@ -38,6 +38,7 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 		public void run() {
 			while(!isInterrupted()) {
 				synchronized(redraw) {
+					processPages();
 					processXOff();
 					doAnimation();
 					if (redraw) {
@@ -54,16 +55,13 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 				canvas = getHolder().lockCanvas();
 				synchronized(getHolder()) {
 					if (left != null) {
-						canvas.drawBitmap(left, new Rect(0, 0, left.getWidth(), left.getHeight()), 
-								new Rect(xOff - getWidth(), 0, xOff, getHeight()), new Paint());
+						canvas.drawBitmap(left, xOff - getWidth(), 0, null);
 					}
 					if (center != null) {
-						canvas.drawBitmap(center, new Rect(0, 0, center.getWidth(), center.getHeight()), 
-								new Rect(xOff, 0, xOff + getWidth(), getHeight()), new Paint());
+						canvas.drawBitmap(center, xOff, 0, null);
 					}
 					if (right != null) {
-						canvas.drawBitmap(right, new Rect(0, 0, right.getWidth(), right.getHeight()), 
-								new Rect(getWidth() + xOff, 0, getWidth() + xOff + getWidth(), getHeight()), new Paint());
+						canvas.drawBitmap(right, xOff + getWidth(), 0, null);
 					}
 				}
 			} finally {
@@ -75,18 +73,7 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			// Clamp X to not fall off available pages
 			if (right == null) xOff = xOff < 0 ? 0 : xOff;
 			if (left == null) xOff = xOff > 0 ? 0 : xOff;
-			
-			// Detect a page change
-			if (xOff >= getWidth()) {
-				Log.i(TAG, "shifting page left.");
-				shiftPageLeft();
-				xOff -= getWidth();
-			} else if (xOff <= -getWidth()) {
-				Log.i(TAG, "shifting page right.");
-				shiftPageRight();
-				xOff += getWidth();
-			}
-			
+						
 			if (!touchDown && animation == null) {
 				// Setup the animation to either turn the page, or re-center the page.
 				if (xOff < -getWidth() * PAGE_TURN_THRESHOLD) {
@@ -113,6 +100,25 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			if (animation == null) return;
 			xOff = (int) animation.getCurrent();
 			animation = null;
+		}
+	
+		private void processPages() {
+			if (pageChangeRequested) {
+				left = getScaledPage(page + 1);
+				center = getScaledPage(page);
+				right = getScaledPage(page - 1);
+				pageChangeRequested = false;
+			}
+			// Detect a page change
+			if (xOff >= getWidth()) {
+				Log.i(TAG, "shifting page left.");
+				shiftPageLeft();
+				xOff -= getWidth();
+			} else if (xOff <= -getWidth()) {
+				Log.i(TAG, "shifting page right.");
+				shiftPageRight();
+				xOff += getWidth();
+			}
 		}
 	}
 	
@@ -191,14 +197,12 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 		setPage(0);
 	}
 	
-	public void setPage(int page) {
+	public void setPage(int newPage) {
 		synchronized (redraw) {
-			Log.i(TAG, "Setting page to " + page);
+			Log.i(TAG, "Setting page to " + newPage);
+			page = newPage;
 			xOff = 0;
-			this.page = page;
-			left = vol.getPageBitmap(page + 1);
-			center = vol.getPageBitmap(page);
-			right = vol.getPageBitmap(page - 1);
+			pageChangeRequested = true;
 			redraw = true;
 		}
 	}
@@ -208,7 +212,7 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			page += 1;
 			right = center;
 			center = left;
-			left = vol.getPageBitmap(page + 1);
+			left = getScaledPage(page + 1);
 		}
 	}
 	
@@ -217,8 +221,21 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			page -= 1;
 			left = center;
 			center = right;
-			right = vol.getPageBitmap(page - 1);
+			right = getScaledPage(page - 1);
 		}
+	}
+	
+	private Bitmap getScaledPage(int page) {
+		Bitmap src = vol.getPageBitmap(page);
+		if (src == null) return null;
+		Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), src.getConfig());
+		bitmap.setDensity(src.getDensity());
+		Canvas c = new Canvas(bitmap);
+		Matrix m = new Matrix();
+		float scale = getWidth() / (1.0f * src.getWidth());
+		m.setScale(scale, scale);
+		c.drawBitmap(src, m, null);
+		return bitmap;
 	}
 	
 	public int getPage() {
