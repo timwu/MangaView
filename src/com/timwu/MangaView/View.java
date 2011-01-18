@@ -1,7 +1,5 @@
 package com.timwu.MangaView;
 
-import java.util.Calendar;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -14,7 +12,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Interpolator;
 
 public class View extends SurfaceView implements SurfaceHolder.Callback {
 	private static final String TAG = View.class.getSimpleName();
@@ -23,21 +20,21 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 	
 	private MangaVolume vol;
 	private int page;
-	private int xOff;
 	private DrawingThread drawingThread;
 	private GestureDetector gestureDetector;
-	private Bitmap left, right, center;
-	private Boolean redraw = false;
-	private boolean touchDown = false;
-	private boolean pageChangeRequested = false;
 	
 	private class DrawingThread extends Thread {
 		private SimpleAnimation animation;
+		private Boolean redraw = false;
+		private boolean touchDown = false;
+		private boolean pageFetch = false;
+		private Bitmap left, right, center;
+		private int xOff;
 		
 		@Override
 		public void run() {
 			while(!isInterrupted()) {
-				synchronized(redraw) {
+				synchronized(this) {
 					processPages();
 					processXOff();
 					doAnimation();
@@ -96,81 +93,78 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			redraw = true;
 		}
 		
-		private void cancelAnimation() {
+		private synchronized void cancelAnimation() {
 			if (animation == null) return;
 			xOff = (int) animation.getCurrent();
 			animation = null;
 		}
 	
 		private void processPages() {
-			if (pageChangeRequested) {
+			if (pageFetch) {
 				left = getScaledPage(page + 1);
 				center = getScaledPage(page);
 				right = getScaledPage(page - 1);
-				pageChangeRequested = false;
+				pageFetch = false;
+				resetXOff();
+				requestRedraw();
 			}
 			// Detect a page change
 			if (xOff >= getWidth()) {
 				Log.i(TAG, "shifting page left.");
-				shiftPageLeft();
+				page++;
+				right = center;
+				center = left;
+				left = getScaledPage(page + 1);
 				xOff -= getWidth();
 			} else if (xOff <= -getWidth()) {
 				Log.i(TAG, "shifting page right.");
-				shiftPageRight();
+				page--;
+				left = center;
+				center = right;
+				right = getScaledPage(page - 1);
 				xOff += getWidth();
 			}
+		}
+		
+		private synchronized void requestRedraw() {
+			redraw = true;
+		}
+		
+		private synchronized void setTouchDown(boolean newTouchDown) {
+			touchDown = newTouchDown;
+		}
+		
+		private synchronized void resetXOff() {
+			xOff = 0;
+			redraw = true;
+		}
+		
+		private synchronized void scroll(int dx, int dy) {
+			xOff -= dx;
+			redraw = true;
+		}
+		
+		private synchronized void requestPageFetch() {
+			pageFetch = true;
 		}
 	}
 	
 	private class GestureListener extends SimpleOnGestureListener {
 		@Override
 		public boolean onDown(MotionEvent e) {
-			synchronized (redraw) {
-				touchDown = true;
-				drawingThread.cancelAnimation();
-			}
+			drawingThread.setTouchDown(true);
+			drawingThread.cancelAnimation();
 			return true;
 		}
 
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
-			synchronized (redraw) {
-				xOff -= distanceX;
-				redraw = true;
-			}
+			drawingThread.scroll((int) distanceX, (int) distanceY);
 			return true;
 		}
 	}
 	
-	private class SimpleAnimation {
-		private long startTime;
-		private long duration;
-		private float distance;
-		private float from, to;
-		private Interpolator interpolator;
-		
-		private SimpleAnimation(Interpolator interpolator, long duration, float from, float to) {
-			this.interpolator = interpolator;
-			this.duration = duration;
-			this.distance = to - from;
-			this.from = from;
-			this.to = to;
-			this.startTime = Calendar.getInstance().getTimeInMillis();
-		}
-		
-		private float getCurrent() {
-			if (isDone()) return to;
-			long currentTime = Calendar.getInstance().getTimeInMillis();
-			float completion = (currentTime - startTime) / (duration * 1.0f) ;
-			return interpolator.getInterpolation(completion) * distance + from;
-		}
-		
-		private boolean isDone() {
-			return Calendar.getInstance().getTimeInMillis() >= startTime + duration;
-		}
-	}
-
 	public View(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init(context);
@@ -198,31 +192,8 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 	}
 	
 	public void setPage(int newPage) {
-		synchronized (redraw) {
-			Log.i(TAG, "Setting page to " + newPage);
-			page = newPage;
-			xOff = 0;
-			pageChangeRequested = true;
-			redraw = true;
-		}
-	}
-	
-	private void shiftPageLeft() {
-		synchronized (redraw) {
-			page += 1;
-			right = center;
-			center = left;
-			left = getScaledPage(page + 1);
-		}
-	}
-	
-	private void shiftPageRight() {
-		synchronized (redraw) {
-			page -= 1;
-			left = center;
-			center = right;
-			right = getScaledPage(page - 1);
-		}
+		page = newPage;
+		drawingThread.requestPageFetch();
 	}
 	
 	private Bitmap getScaledPage(int page) {
@@ -246,9 +217,7 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_UP) {
 			// Catch the touch up and update state so the drawingThread knows to animate.
-			synchronized (redraw) {
-				touchDown = false;
-			}
+			drawingThread.setTouchDown(false);
 		}
 		return gestureDetector.onTouchEvent(event);
 	}
