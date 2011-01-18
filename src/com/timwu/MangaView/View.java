@@ -3,6 +3,7 @@ package com.timwu.MangaView;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -49,6 +50,8 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			Canvas canvas = null;
 			try {
 				canvas = getHolder().lockCanvas();
+				canvas.clipRect(0, 0, getWidth(), getHeight());
+				canvas.drawColor(Color.BLACK);
 				synchronized(getHolder()) {
 					if (left != null) {
 						canvas.drawBitmap(left, xOff - getWidth(), 
