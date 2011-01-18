@@ -3,7 +3,6 @@ package com.timwu.MangaView;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -52,13 +51,16 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 				canvas = getHolder().lockCanvas();
 				synchronized(getHolder()) {
 					if (left != null) {
-						canvas.drawBitmap(left, xOff - getWidth(), 0, null);
+						canvas.drawBitmap(left, xOff - getWidth(), 
+								(getHeight() - left.getHeight()) / 2, null);
 					}
 					if (center != null) {
-						canvas.drawBitmap(center, xOff, 0, null);
+						canvas.drawBitmap(center, xOff, 
+								(getHeight() - center.getHeight()) / 2, null);
 					}
 					if (right != null) {
-						canvas.drawBitmap(right, xOff + getWidth(), 0, null);
+						canvas.drawBitmap(right, xOff + getWidth(), 
+								(getHeight() - right.getHeight()) / 2, null);
 					}
 				}
 			} finally {
@@ -93,12 +95,6 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 			redraw = true;
 		}
 		
-		private synchronized void cancelAnimation() {
-			if (animation == null) return;
-			xOff = (int) animation.getCurrent();
-			animation = null;
-		}
-	
 		private void processPages() {
 			if (pageFetch) {
 				left = getScaledPage(page + 1);
@@ -124,6 +120,12 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 				right = getScaledPage(page - 1);
 				xOff += getWidth();
 			}
+		}
+		
+		private synchronized void cancelAnimation() {
+			if (animation == null) return;
+			xOff = (int) animation.getCurrent();
+			animation = null;
 		}
 		
 		private synchronized void requestRedraw() {
@@ -199,14 +201,8 @@ public class View extends SurfaceView implements SurfaceHolder.Callback {
 	private Bitmap getScaledPage(int page) {
 		Bitmap src = vol.getPageBitmap(page);
 		if (src == null) return null;
-		Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), src.getConfig());
-		bitmap.setDensity(src.getDensity());
-		Canvas c = new Canvas(bitmap);
-		Matrix m = new Matrix();
 		float scale = getWidth() / (1.0f * src.getWidth());
-		m.setScale(scale, scale);
-		c.drawBitmap(src, m, null);
-		return bitmap;
+		return Bitmap.createScaledBitmap(src, getWidth(), (int) (scale * src.getHeight()), false);
 	}
 	
 	public int getPage() {
